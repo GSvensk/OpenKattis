@@ -2,58 +2,62 @@
 class Node:
 
     def __init__(self, nummer):
-        self.nummer = nummer
-        self.friends = []
+        self.nummer = int(nummer)
+        self.friends = set()
 
-    def printing(self):
-        print(self.nummer)
-
-        #str = self.friends.copy()
-        #print('friends: ')
-        #for i in str:
-           # str.pop().printing()
-
-
-    def add_friend(self, friend):
-        self.friends += friend.get_friends()
-        self.friends.append(friend)
-
-    def get_friends(self):
-        return self.friends
+    def merge(self, b):
+        #self.friends = self.friends.union(b.get_friends())
+        self.friends = self.friends|b.friends
+        b.friends = self.friends
+        self.friends.add(b)
+        b.friends.add(self)
 
     def friends_with(self, b):
-        return (b in self.friends)
+        return b in self.friends
 
+    def print_friends(self):
+        print("node: {}".format(self.nummer))
+        for i in self.friends:
+            print(i.nummer)
 
-def solve():
+tmp = input().split()
+noofelements = int(tmp[0])
+operations = int(tmp[1])
+nodes = []
+numbers = set()
+
+for i in range(0, operations):
     tmp = input().split()
-    noofelements = int(tmp[0])
-    operations = int(tmp[1])
-    nodes = []
+    query = tmp[0]
 
-    for i in range(0, noofelements):
-        nodes.append(Node(i))
+    if int(tmp[1]) in numbers:
+        for j in nodes:
+            if j.nummer == int(tmp[1]):
+                a = j
+    else:
+        numbers.add(int(tmp[1]))
+        a = Node(int(tmp[1]))
+        nodes.append(a)
 
-    for i in range(0, operations):
-        tmp = input().split()
-        query = tmp[0]
+    if int(tmp[2]) in numbers:
+        for k in nodes:
+            if k.nummer == int(tmp[2]):
+                b = k
+    else:
+        numbers.add(int(tmp[2]))
+        b = Node(int(tmp[2]))
+        nodes.append(b)
 
-        a = nodes[int(tmp[1])]
-        b = nodes[int(tmp[2])]
-
-        if query == '?':
-            if a.friends_with(b):
-                print('yes')
-            elif b.friends_with(a):
-                print('yes')
-            elif a == b:
-                print('yes')
-            else:
-                print('no')
+    if query == '?':
+        if a.friends_with(b):
+            print('yes')
+        elif b.friends_with(a):
+          print('yes')
+        elif a == b:
+            print('yes')
         else:
-            a.add_friend(b)
-            b.add_friend(a)
-
-
-if __name__ == '__main__':
-    solve()
+            print('no')
+    else:
+        #a.add_friend(b)
+        #b.add_friend(a)
+        a.merge(b)
