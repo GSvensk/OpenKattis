@@ -1,0 +1,200 @@
+import java.util.ArrayList;
+import java.util.HashSet;
+
+public class Tenkindsofpeople {
+
+	static char[][] world;
+	int rows;
+	int columns;
+	final char BINARY = '0';
+	final char DECIMAL = '1';
+
+	public Tenkindsofpeople(int rows, int columns) {
+		world = new char[rows][columns];
+		this.rows = rows-1;
+		this.columns = columns-1;
+	}
+
+	private class SearchNode {
+		int x, y;
+		char type;
+
+		SearchNode(int x, int y, char type) {
+			this.x = x;
+			this.y = y;
+			this.type = type;
+		}
+
+		public void print() {
+			System.out.println("Position (x, y): (" + x + ", " + y + ")");
+		}
+
+		// To make hash sets work
+		@Override
+		public int hashCode() {
+			return (x+y);
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			
+			if(obj instanceof SearchNode){
+				SearchNode otherNode = (SearchNode) obj;
+				//Rest of the code to check equality
+				if ((otherNode.x == x) && (otherNode.y == y)) {
+					return true;
+				}
+				return false;
+			} else {
+				return false;
+			}
+		}
+
+	}
+
+	public void printWorld() {
+
+		System.out.println("World");
+		for(int i = 0; i < rows; i++) {
+			for(int j = 0; j < columns; j++ ) {
+				System.out.print(world[i][j]);
+			}
+			System.out.println();
+		}
+	}
+
+	public Boolean isGoal(SearchNode sn, int r_fin, int c_fin) {
+		if(sn.x == r_fin && sn.y == c_fin) {
+			if(sn.type == '1') {
+				System.out.println("decimal");
+			} else {
+				System.out.println("binary");
+			}
+			return true;
+		}
+		return false;
+	}
+
+	public ArrayList<SearchNode> getReachableStates(SearchNode sn) {
+
+		ArrayList<SearchNode> ans = new ArrayList<SearchNode>();
+
+		if((sn.y > 0) && (world[sn.x][sn.y-1] == sn.type)) {
+			ans.add(new SearchNode(sn.x, sn.y-1, sn.type));
+
+		}
+
+		if((sn.y < columns) && (world[sn.x][sn.y+1] == sn.type)) {
+			ans.add(new SearchNode(sn.x, sn.y+1, sn.type));
+
+		}
+
+		if((sn.x > 0) && (world[sn.x-1][sn.y] == sn.type)) {
+			ans.add(new SearchNode(sn.x-1, sn.y, sn.type));
+
+		}
+
+		if((sn.x < rows) && (world[sn.x+1][sn.y] == sn.type)){
+			ans.add(new SearchNode(sn.x+1, sn.y, sn.type));
+		} 
+
+		return ans;
+	}
+
+	public boolean findRoad(int r_start, int c_start, int r_fin, int c_fin) {
+
+
+		//System.out.println("start: " + r_start + ", " + c_start);
+		//System.out.println("goal: " + r_fin + ", " + c_fin);
+
+		// The frontier is a queue of expanded SearchNodes not processed yet
+		ArrayList<SearchNode> frontier = new ArrayList<SearchNode>(); 
+		/// The explored set is a set of nodes that have been processed 
+		HashSet<SearchNode> explored = new HashSet<SearchNode>();
+
+		SearchNode startNode;
+		SearchNode childNode;
+		ArrayList<SearchNode> childStates;
+
+		if (world[r_start][c_start] == BINARY) {
+			startNode = new SearchNode(r_start, c_start, '0');
+		} else {
+			startNode = new SearchNode(r_start, c_start, '1');
+		}
+
+		// Initialize the frontier with the start state  
+		frontier.add(startNode);
+
+		//in case first node is goal
+		if (isGoal(startNode, r_fin, c_fin)) {
+			return true;
+		}
+
+		while (true) {
+
+			if (frontier.isEmpty()) {
+				return false;
+			}
+
+			SearchNode search_node = frontier.remove(0);
+			//System.out.println("SearchNode: ");
+			//search_node.print();
+
+			//Add node to investigate to explored
+			explored.add(search_node);		
+
+			//Arraylist of possible states, no walls
+			childStates = getReachableStates(search_node);	
+
+			//System.out.println("Childstates: ");
+			//for(int i = 0; i < childStates.size(); i++) {
+				//childStates.get(i).print();
+			//}
+
+			//loop over all childstates
+			for(int i = 0; i < childStates.size(); i++) {								
+				childNode = childStates.get(i);
+				//not in frontier or previously explored
+				//System.out.print("childNode: ");
+				//childNode.print();
+				if(!explored.contains(childNode)) {
+					//System.out.println("ej i frontier");
+					if(!frontier.contains(childNode)) {
+						//System.out.println("ej i explored");
+						//if goal -> return path, possible since first answer is correct answer
+						if (isGoal(childNode, r_fin, c_fin)) {						
+							return true;
+						}
+						frontier.add(childNode);
+
+					}
+				}
+			}
+		}
+	}
+
+	public static void main(String args[]) {
+
+		Kattio io = new Kattio(System.in);
+		int rows = io.getInt();
+		int columns = io.getInt();
+		Tenkindsofpeople ten = new Tenkindsofpeople(rows, columns);
+
+		String tmp;
+
+		for(int i = 0; i < rows; i++) {
+			tmp = io.getWord();
+			for(int j = 0; j < columns; j++) {
+				world[i][j] = tmp.charAt(j);
+			}
+		}
+
+		int queries = io.getInt();
+
+		for(int i = 0; i < queries; i++) {
+			if (!ten.findRoad(io.getInt()-1, io.getInt()-1, io.getInt()-1, io.getInt()-1)) {
+				System.out.println("neither");
+			}
+		}
+	}
+}
