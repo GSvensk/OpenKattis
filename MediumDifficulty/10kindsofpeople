@@ -1,71 +1,47 @@
-import java.util.ArrayList;
+package problemos;
+
 import java.util.HashSet;
 
 public class Tenkindsofpeople {
 
 	static char[][] world;
-	int rows;
-	int columns;
-	final char BINARY = '0';
-	final char DECIMAL = '1';
+	static boolean[][] explored;
+	//static int[][] found_groups;
+	int rows, columns;
+	final char BINARY = '0', DECIMAL = '1';
 
 	public Tenkindsofpeople(int rows, int columns) {
 		world = new char[rows][columns];
+		//found_groups = new int[rows][columns];
 		this.rows = rows-1;
 		this.columns = columns-1;
 	}
 
-	private class SearchNode {
+	public class Point {
 		int x, y;
 		char type;
 
-		SearchNode(int x, int y, char type) {
+		public Point(int x, int y, char type) {
 			this.x = x;
 			this.y = y;
 			this.type = type;
 		}
 
-		public void print() {
-			System.out.println("Position (x, y): (" + x + ", " + y + ")");
+		@Override
+		public boolean equals(Object obj) {
+			Point other = (Point) obj;
+			return ((x == other.x) && (y == other.y));
 		}
 
-		// To make hash sets work
 		@Override
 		public int hashCode() {
 			return (x+y);
 		}
-		
-		@Override
-		public boolean equals(Object obj) {
-			
-			if(obj instanceof SearchNode){
-				SearchNode otherNode = (SearchNode) obj;
-				//Rest of the code to check equality
-				if ((otherNode.x == x) && (otherNode.y == y)) {
-					return true;
-				}
-				return false;
-			} else {
-				return false;
-			}
-		}
-
 	}
 
-	public void printWorld() {
-
-		System.out.println("World");
-		for(int i = 0; i < rows; i++) {
-			for(int j = 0; j < columns; j++ ) {
-				System.out.print(world[i][j]);
-			}
-			System.out.println();
-		}
-	}
-
-	public Boolean isGoal(SearchNode sn, int r_fin, int c_fin) {
-		if(sn.x == r_fin && sn.y == c_fin) {
-			if(sn.type == '1') {
+	public Boolean isGoal(Point sp, int r_fin, int c_fin) {
+		if(sp.x == r_fin && sp.y == c_fin) {
+			if(sp.type == '1') {
 				System.out.println("decimal");
 			} else {
 				System.out.println("binary");
@@ -75,102 +51,90 @@ public class Tenkindsofpeople {
 		return false;
 	}
 
-	public ArrayList<SearchNode> getReachableStates(SearchNode sn) {
-
-		ArrayList<SearchNode> ans = new ArrayList<SearchNode>();
-
-		if((sn.y > 0) && (world[sn.x][sn.y-1] == sn.type)) {
-			ans.add(new SearchNode(sn.x, sn.y-1, sn.type));
-
-		}
-
-		if((sn.y < columns) && (world[sn.x][sn.y+1] == sn.type)) {
-			ans.add(new SearchNode(sn.x, sn.y+1, sn.type));
-
-		}
-
-		if((sn.x > 0) && (world[sn.x-1][sn.y] == sn.type)) {
-			ans.add(new SearchNode(sn.x-1, sn.y, sn.type));
-
-		}
-
-		if((sn.x < rows) && (world[sn.x+1][sn.y] == sn.type)){
-			ans.add(new SearchNode(sn.x+1, sn.y, sn.type));
-		} 
-
-		return ans;
-	}
-
-	public boolean findRoad(int r_start, int c_start, int r_fin, int c_fin) {
-
-
-		//System.out.println("start: " + r_start + ", " + c_start);
-		//System.out.println("goal: " + r_fin + ", " + c_fin);
+	public boolean search(int x_start, int y_start, int x_fin, int y_fin) {
 
 		// The frontier is a queue of expanded SearchNodes not processed yet
-		ArrayList<SearchNode> frontier = new ArrayList<SearchNode>(); 
-		/// The explored set is a set of nodes that have been processed 
-		HashSet<SearchNode> explored = new HashSet<SearchNode>();
+		HashSet<Point> frontier = new HashSet<Point>(); 
+		// Check if coordinates have been explored
+		explored = new boolean[rows+1][columns+1]; 
 
-		SearchNode startNode;
-		SearchNode childNode;
-		ArrayList<SearchNode> childStates;
+		Point startNode;
+		Point a;
+		char type;
 
-		if (world[r_start][c_start] == BINARY) {
-			startNode = new SearchNode(r_start, c_start, '0');
+		if (world[x_start][y_start] == BINARY) {
+			startNode = new Point(x_start, y_start, '0');
+			type = BINARY;
 		} else {
-			startNode = new SearchNode(r_start, c_start, '1');
+			startNode = new Point(x_start, y_start, '1');
+			type = DECIMAL;
 		}
 
 		// Initialize the frontier with the start state  
 		frontier.add(startNode);
 
 		//in case first node is goal
-		if (isGoal(startNode, r_fin, c_fin)) {
+		if (isGoal(startNode, x_fin, y_fin)) {
 			return true;
 		}
 
-		while (true) {
+		while (!frontier.isEmpty()) {
 
-			if (frontier.isEmpty()) {
-				return false;
-			}
+			Point sp = frontier.stream().findFirst().get();
 
-			SearchNode search_node = frontier.remove(0);
-			//System.out.println("SearchNode: ");
-			//search_node.print();
+			frontier.remove(sp);
 
 			//Add node to investigate to explored
-			explored.add(search_node);		
+			explored[sp.x][sp.y] = true;
 
-			//Arraylist of possible states, no walls
-			childStates = getReachableStates(search_node);	
-
-			//System.out.println("Childstates: ");
-			//for(int i = 0; i < childStates.size(); i++) {
-				//childStates.get(i).print();
-			//}
-
-			//loop over all childstates
-			for(int i = 0; i < childStates.size(); i++) {								
-				childNode = childStates.get(i);
-				//not in frontier or previously explored
-				//System.out.print("childNode: ");
-				//childNode.print();
-				if(!explored.contains(childNode)) {
-					//System.out.println("ej i frontier");
-					if(!frontier.contains(childNode)) {
-						//System.out.println("ej i explored");
-						//if goal -> return path, possible since first answer is correct answer
-						if (isGoal(childNode, r_fin, c_fin)) {						
-							return true;
-						}
-						frontier.add(childNode);
-
+			if((sp.y > 0) && (world[sp.x][sp.y-1] == type) && (!explored[sp.x][sp.y-1])){
+				a = new Point(sp.x, sp.y-1, type);
+				if (!frontier.contains(a)) {
+					if(isGoal(a, x_fin, y_fin)) {
+						return true;
+					} else {
+						frontier.add(a);
 					}
 				}
 			}
+
+			if((sp.y < columns) && (world[sp.x][sp.y+1] == type) && (!explored[sp.x][sp.y+1])) {
+				a = new Point(sp.x, sp.y+1, type);
+				if (!frontier.contains(a)) {
+					if(isGoal(a, x_fin, y_fin)) {
+						return true;
+					} else {
+						frontier.add(a);
+					}
+				}
+			}
+
+			if((sp.x > 0) && (world[sp.x-1][sp.y] == sp.type) && (!explored[sp.x-1][sp.y])) {
+
+				a = new Point(sp.x-1, sp.y, type);
+				if (!frontier.contains(a)) {
+					if(isGoal(a, x_fin, y_fin)) {
+						return true;
+					} else {
+						frontier.add(a);
+					}
+				}
+
+			}
+
+			if((sp.x < rows) && (world[sp.x+1][sp.y] == sp.type) && (!explored[sp.x+1][sp.y])){
+
+				a = new Point(sp.x+1, sp.y, sp.type);
+				if (!frontier.contains(a)) {
+					if(isGoal(a, x_fin, y_fin)) {
+						return true;
+					} else {
+						frontier.add(a);
+					}
+				}
+			} 
 		}
+		return false;
 	}
 
 	public static void main(String args[]) {
@@ -178,21 +142,16 @@ public class Tenkindsofpeople {
 		Kattio io = new Kattio(System.in);
 		int rows = io.getInt();
 		int columns = io.getInt();
-		Tenkindsofpeople ten = new Tenkindsofpeople(rows, columns);
+		Tenkindsofpeople elf = new Elevenkindsofpeople(rows, columns);
 
-		String tmp;
-
-		for(int i = 0; i < rows; i++) {
-			tmp = io.getWord();
-			for(int j = 0; j < columns; j++) {
-				world[i][j] = tmp.charAt(j);
-			}
+		for (int i = 0; i < rows; i++) {
+			world[i] = io.getWord().toCharArray();
 		}
 
 		int queries = io.getInt();
 
 		for(int i = 0; i < queries; i++) {
-			if (!ten.findRoad(io.getInt()-1, io.getInt()-1, io.getInt()-1, io.getInt()-1)) {
+			if (!elf.search(io.getInt()-1, io.getInt()-1, io.getInt()-1, io.getInt()-1)) {
 				System.out.println("neither");
 			}
 		}
