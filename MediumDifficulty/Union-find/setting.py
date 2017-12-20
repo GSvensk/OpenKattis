@@ -3,19 +3,19 @@
 
 def solve(operations):
     #Superset of all sets
-    allsets = set()
+    all_sets = set()
 
-    for q in range(0, operations):
+    for q in range(operations):
         inputarray = input().split()
 
         a = frozenset(inputarray[1])
         b = frozenset(inputarray[2])
 
-        for j in allsets:
-            #Check if a is a proper subset of any of the sets
+        for j in all_sets:
+            # Check if a is a proper subset of any of the sets
             if a < j:
                 a = j
-            #Check if b is a proper subset of any of the sets
+            # Check if b is a proper subset of any of the sets
             if b < j:
                 b = j
 
@@ -27,7 +27,7 @@ def solve(operations):
                 print('yes')
         #Unite sets
         else:
-            allsets.add(frozenset(a|b))
+            all_sets.add(frozenset(a|b))
 
 if __name__ == "__main__":
     tmp = input().split()
